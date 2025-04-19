@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Análisis de Clientes</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse para procesar CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- DataTables para tablas interactivas -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <!-- Integración con base de datos SQL -->
+    <script src="database_integration.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Dashboard de Análisis de Clientes</h1>
+        <div class="filters">
+            <div class="filter-group">
+                <label for="education-filter">Educación:</label>
+                <select id="education-filter">
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="marital-filter">Estado Civil:</label>
+                <select id="marital-filter">
+                    <option value="all">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="income-filter">Rango de Ingresos:</label>
+                <select id="income-filter">
+                    <option value="all">Todos</option>
+                    <option value="0-30000">0-30,000</option>
+                    <option value="30001-60000">30,001-60,000</option>
+                    <option value="60001-90000">60,001-90,000</option>
+                    <option value="90001+">90,001+</option>
+                </select>
+            </div>
+            <button id="apply-filters">Aplicar Filtros</button>
+            <button id="reset-filters">Restablecer</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard-section">
+            <h2>Resumen General</h2>
+            <div class="kpi-cards">
+                <div class="kpi-card">
+                    <h3>Total Clientes</h3>
+                    <p id="total-customers">0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Ingreso Promedio</h3>
+                    <p id="avg-income">$0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Tasa de Respuesta</h3>
+                    <p id="response-rate">0%</p>
+                </div>
+                <div class="kpi-card">
+                    <h3>Tasa de Quejas</h3>
+                    <p id="complaint-rate">0%</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="dashboard-section">
+            <h2>Predicción de Respuesta a Productos</h2>
+            <div class="prediction-controls">
+                <div class="control-group">
+                    <label for="product-selector">Seleccionar Producto:</label>
+                    <select id="product-selector">
+                        <!-- Opciones se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button id="train-model-button" class="primary-button">Entrenar Modelo</button>
+                    <button id="predict-button">Predecir Respuesta</button>
+                </div>
+            </div>
+            
+            <div class="prediction-info">
+                <div class="model-info">
+                    <h3>Estado del Modelo</h3>
+                    <p id="model-status" class="status">No entrenado</p>
+                    <div class="model-metrics">
+                        <div class="metric">
+                            <span>Precisión:</span>
+                            <span id="model-accuracy">-</span>
+                        </div>
+                        <div class="metric">
+                            <span>Exactitud:</span>
+                            <span id="model-precision">-</span>
+                        </div>
+                        <div class="metric">
+                            <span>Sensibilidad:</span>
+                            <span id="model-recall">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-info">
+                    <h3>Información del Producto</h3>
+                    <div class="product-details">
+                        <div class="detail">
+                            <span>Nombre:</span>
+                            <span id="product-name">-</span>
+                        </div>
+                        <div class="detail">
+                            <span>Categoría:</span>
+                            <span id="product-category">-</span>
+                        </div>
+                        <div class="detail">
+                            <span>Precio:</span>
+                            <span id="product-price">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prediction-result-container">
+                    <h3>Resultado de Predicción</h3>
+                    <p id="prediction-result">-</p>
+                    <p id="prediction-probability" class="probability">-</p>
+                </div>
+            </div>
+            
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Predicción por Segmento</h3>
+                    <canvas id="segment-prediction-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Tabla de Segmentos</h3>
+                    <div class="table-container">
+                        <table id="segment-prediction-table">
+                            <thead>
+                                <tr>
+                                    <th>Segmento</th>
+                                    <th>Clientes</th>
+                                    <th>Probabilidad</th>
+                                    <th>Respuestas Esperadas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Los datos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Se eliminó la sección de Top 10 Productos según lo solicitado -->
+            
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Predicción por Categoría</h3>
+                    <canvas id="category-prediction-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Tabla de Productos</h3>
+                    <div class="table-container">
+                        <table id="products-prediction-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Probabilidad</th>
+                                    <th>Respuestas Esperadas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Los datos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Demografía de Clientes</h2>
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Distribución por Educación</h3>
+                    <canvas id="education-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Distribución por Estado Civil</h3>
+                    <canvas id="marital-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Distribución por Edad</h3>
+                    <canvas id="age-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Distribución por Ingresos</h3>
+                    <canvas id="income-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Comportamiento de Compra</h2>
+            <div class="charts-container">
+                <div class="chart-wrapper wide">
+                    <h3>Gasto por Categoría de Producto</h3>
+                    <canvas id="product-spending-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Canales de Compra</h3>
+                    <canvas id="purchase-channels-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Relación Ingresos vs Gasto</h3>
+                    <canvas id="income-spending-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Efectividad de Campañas</h2>
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Tasa de Aceptación por Campaña</h3>
+                    <canvas id="campaign-acceptance-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Perfil de Clientes que Responden</h3>
+                    <canvas id="responders-profile-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Datos de Clientes</h2>
+            <div class="table-container">
+                <table id="customers-table" class="display">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Año Nacimiento</th>
+                            <th>Educación</th>
+                            <th>Estado Civil</th>
+                            <th>Ingresos</th>
+                            <th>Niños</th>
+                            <th>Adolescentes</th>
+                            <th>Fecha Cliente</th>
+                            <th>Recencia</th>
+                            <th>Gasto Total</th>
+                            <th>Respuesta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Dashboard de Análisis de Clientes desarrollado por Eduardo Núñez</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="product_prediction.js"></script>
+</body>
+</html>
